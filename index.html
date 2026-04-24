@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>صور إلى PDF</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body{font-family:Arial;background:#07080c;color:white;text-align:center;padding:25px}
+.box{background:#171820;padding:25px;border-radius:24px;max-width:430px;margin:auto}
+input,button{width:100%;padding:15px;margin-top:12px;border-radius:16px;border:0;box-sizing:border-box}
+button{background:#00f59b;font-weight:bold;font-size:17px}
+.status{margin-top:14px;color:#ccc;font-weight:bold}
+a{display:block;background:#00f59b;color:#000;padding:15px;border-radius:16px;text-decoration:none;font-weight:bold;margin-top:18px}
+</style>
+</head>
+<body>
+
+<div class="box">
+<h2>تحويل صور إلى PDF ⚡</h2>
+<p>فوري من جهازك بدون سيرفر</p>
+
+<input id="images" type="file" accept="image/*" multiple>
+<button onclick="makePDF()">تحويل PDF</button>
+
+<div id="status" class="status"></div>
+<div id="result"></div>
+</div>
+
+<script>
+async function makePDF(){
+  const files = document.getElementById("images").files;
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
+
+  if(files.length === 0){
+    status.innerHTML = "اختر صور أول";
+    return;
+  }
+
+  result.innerHTML = "";
+  status.innerHTML = "جاري تجهيز PDF...";
+
+  const { jsPDF } = window.jspdf;
+  let pdf = null;
+
+  for(let i = 0; i < files.length; i++){
+    status.innerHTML = `جاري تحويل الصورة ${i+1} من ${files.length}`;
+
+    const imgData = await readFile(files[i]);
+    const img = await loadImage(imgData);
+
+    const width = img.width;
+    const height = img.height;
+
+    const orientation = width > height ? "landscape" : "portrait";
+
+    if(i === 0){
+      pdf = new jsPDF({
+        orientation: orientation,
+        unit: "px",
+        format: [width, height]
+      });
+    }else{
+      pdf.addPage([width, height], orientation);
+    }
+
+    pdf.addImage(imgData, "JPEG", 0, 0, width, height);
+  }
+
+  const blob = pdf.output("blob");
+  const url = URL.createObjectURL(blob);
+
+  status.innerHTML = "جاهز ✅";
+  result.innerHTML = `<a href="${url}" download="images.pdf">تنزيل PDF</a>`;
+}
+
+function readFile(file){
+  return new Promise((resolve)=>{
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(src){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.src = src;
+  });
+}
+</script>
+
+</body>
+</html>
