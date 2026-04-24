@@ -2,212 +2,178 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDF Fast</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 *{box-sizing:border-box}
+
 body{
   margin:0;
   min-height:100vh;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+  font-family:-apple-system;
   background:
     radial-gradient(circle at top right,#103b34,transparent 35%),
     radial-gradient(circle at bottom left,#10243b,transparent 35%),
     #07080c;
   color:white;
-  padding:22px;
   display:flex;
   align-items:center;
   justify-content:center;
 }
-.app{
-  width:100%;
-  max-width:430px;
-}
+
+.app{width:100%;max-width:430px;padding:20px;}
+
 .card{
-  background:rgba(23,24,32,.88);
-  backdrop-filter:blur(18px);
-  border:1px solid rgba(255,255,255,.08);
+  background:rgba(23,24,32,.9);
   border-radius:30px;
   padding:26px;
-  box-shadow:0 25px 80px rgba(0,0,0,.55);
+  box-shadow:0 25px 80px rgba(0,0,0,.6);
 }
+
 .logo{
   width:70px;height:70px;
-  margin:0 auto 14px;
+  margin:auto;
   border-radius:22px;
   background:linear-gradient(135deg,#00f59b,#00cfff);
-  display:flex;align-items:center;justify-content:center;
-  font-size:34px;
-  box-shadow:0 0 35px rgba(0,245,155,.35);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:32px;
 }
-h1{margin:0;font-size:28px}
-.sub{color:#a7a7b5;margin-top:8px;font-size:14px}
-.pick{
-  margin-top:22px;
-  border:2px dashed rgba(255,255,255,.16);
-  border-radius:24px;
-  padding:22px;
-  background:rgba(255,255,255,.04);
+
+h1{margin:15px 0 5px;font-size:26px}
+.sub{color:#aaa;font-size:14px}
+
+input{
+  width:100%;
+  margin-top:15px;
+  padding:14px;
+  border-radius:16px;
+  border:none;
+  background:#222;
+  color:white;
 }
-input{display:none}
-.pick label{
-  display:block;
-  background:#fff;
-  color:#111;
-  padding:15px;
-  border-radius:18px;
-  font-weight:800;
-}
-.count{margin-top:13px;color:#cfcfd8;font-weight:700}
+
 button{
   width:100%;
-  margin-top:18px;
-  padding:17px;
-  border:0;
-  border-radius:20px;
-  font-size:17px;
-  font-weight:900;
-  color:#06110d;
+  margin-top:15px;
+  padding:16px;
+  border:none;
+  border-radius:18px;
   background:linear-gradient(90deg,#00f59b,#00d9ff);
-  box-shadow:0 12px 35px rgba(0,245,155,.25);
+  font-weight:bold;
+  font-size:16px;
 }
-button:disabled{opacity:.55}
+
 .progress{
-  height:13px;
-  background:#2a2b33;
-  margin-top:18px;
-  border-radius:999px;
+  height:12px;
+  background:#222;
+  margin-top:15px;
+  border-radius:10px;
   overflow:hidden;
 }
+
 .bar{
   height:100%;
   width:0%;
   background:linear-gradient(90deg,#00f59b,#00d9ff);
-  transition:.2s;
+  transition:.3s;
 }
-.status{
-  margin-top:12px;
-  min-height:22px;
-  color:#c7c7d3;
-  font-weight:700;
-}
-.download{
-  display:block;
-  margin-top:18px;
-  background:#00f59b;
-  color:#03110b;
-  padding:16px;
-  border-radius:20px;
-  text-decoration:none;
-  font-weight:900;
-}
-.small{
-  margin-top:14px;
-  color:#858594;
-  font-size:12px;
-  line-height:1.6;
-}
+
+.status{margin-top:10px;color:#aaa}
+
 </style>
 </head>
+
 <body>
 
 <div class="app">
-  <div class="card">
-    <div class="logo">📄</div>
-    <h1>PDF Fast</h1>
-    <div class="sub">حوّل الصور إلى PDF فوريًا من جهازك</div>
+<div class="card">
 
-    <div class="pick">
-      <label for="files">اختيار الصور</label>
-      <input id="files" type="file" accept="image/*" multiple>
-      <div id="count" class="count">لم يتم اختيار صور</div>
-    </div>
+<div class="logo">📄</div>
 
-    <button id="btn" onclick="makePDF()">تحويل إلى PDF ⚡</button>
+<h1>PDF Fast</h1>
+<div class="sub">تحويل الصور إلى PDF فوري ⚡</div>
 
-    <div class="progress"><div id="bar" class="bar"></div></div>
-    <div id="status" class="status"></div>
-    <div id="result"></div>
+<input id="files" type="file" accept="image/*" multiple>
 
-    <div class="small">
-      التحويل يصير داخل جهازك، يعني أسرع وما يحتاج سيرفر.
-    </div>
-  </div>
+<button onclick="go()">تحويل</button>
+
+<div class="progress"><div id="bar" class="bar"></div></div>
+<div id="status" class="status"></div>
+
+</div>
 </div>
 
 <script>
-const filesInput=document.getElementById("files");
-const count=document.getElementById("count");
-
-filesInput.addEventListener("change",()=>{
-  const n=filesInput.files.length;
-  count.textContent=n?`تم اختيار ${n} صورة`:"لم يتم اختيار صور";
-});
-
-async function makePDF(){
-  const files=filesInput.files;
+async function go(){
+  const files=document.getElementById("files").files;
   const status=document.getElementById("status");
   const bar=document.getElementById("bar");
-  const result=document.getElementById("result");
-  const btn=document.getElementById("btn");
 
-  if(!files.length){
-    status.textContent="اختر الصور أول";
+  if(files.length===0){
+    status.innerHTML="اختر صور";
     return;
   }
 
-  btn.disabled=true;
-  result.innerHTML="";
   bar.style.width="0%";
-  status.textContent="جاري التجهيز...";
+  status.innerHTML="جاري التحويل...";
 
   const {jsPDF}=window.jspdf;
   let pdf=null;
 
   for(let i=0;i<files.length;i++){
-    status.textContent=`تحويل الصورة ${i+1} من ${files.length}`;
+    status.innerHTML=`${i+1}/${files.length}`;
 
-    const imgData=await readFile(files[i]);
-    const img=await loadImage(imgData);
+    const imgData=await read(files[i]);
+    const img=await load(imgData);
 
-    let w=img.naturalWidth;
-    let h=img.naturalHeight;
-
-    const orientation=w>h?"landscape":"portrait";
+    const w=img.width;
+    const h=img.height;
+    const orient=w>h?"landscape":"portrait";
 
     if(i===0){
-      pdf=new jsPDF({orientation,unit:"px",format:[w,h],compress:false});
+      pdf=new jsPDF({orientation:orient,unit:"px",format:[w,h]});
     }else{
-      pdf.addPage([w,h],orientation);
+      pdf.addPage([w,h],orient);
     }
 
-    pdf.addImage(imgData,"JPEG",0,0,w,h,undefined,"FAST");
-    bar.style.width=Math.round(((i+1)/files.length)*100)+"%";
-    await new Promise(r=>setTimeout(r,50));
+    pdf.addImage(imgData,"JPEG",0,0,w,h);
+
+    bar.style.width=((i+1)/files.length*100)+"%";
   }
+
+  status.innerHTML="يتم التحميل... ⏬";
 
   const blob=pdf.output("blob");
   const url=URL.createObjectURL(blob);
 
-  status.textContent="جاهز ✅";
-  result.innerHTML=`<a class="download" href="${url}" download="images.pdf">تنزيل PDF</a>`;
-  btn.disabled=false;
+  // تحميل مباشر
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="images.pdf";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  status.innerHTML="تم الحفظ في الملفات ✅";
 }
 
-function readFile(file){
-  return new Promise(resolve=>{
-    const reader=new FileReader();
-    reader.onload=e=>resolve(e.target.result);
+function read(file){
+  return new Promise(r=>{
+    let reader=new FileReader();
+    reader.onload=e=>r(e.target.result);
     reader.readAsDataURL(file);
   });
 }
 
-function loadImage(src){
-  return new Promise(resolve=>{
-    const img=new Image();
-    img.onload=()=>resolve(img);
+function load(src){
+  return new Promise(r=>{
+    let img=new Image();
+    img.onload=()=>r(img);
     img.src=src;
   });
 }
